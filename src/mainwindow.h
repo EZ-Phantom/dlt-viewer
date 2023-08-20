@@ -41,6 +41,7 @@
 #include "searchtablemodel.h"
 #include "sortfilterproxymodel.h"
 #include "ui_mainwindow.h"
+#include "custommarks.h"
 
 
 /**
@@ -236,6 +237,8 @@ private:
     /**/
     SortFilterProxyModel *sortProxyModel;
 
+    CustomMarks *customMarks;
+
     /* functions called in constructor */
     void initState();
     void initView();
@@ -276,7 +279,7 @@ private:
     void controlMessage_ReceiveControlMessage(EcuItem *ecuitem,QDltMsg &msg);
     void controlMessage_SetContext(EcuItem *ecuitem, QString apid, QString ctid,QString ctdescription,int log_level,int trace_status);
     void controlMessage_SetApplication(EcuItem *ecuitem, QString apid, QString appdescription);
-    void controlMessage_Marker();
+    void controlMessage_Marker(const QString &markerMessage = QString(""));
 
     void filterDialogRead(FilterDialog &dlg,FilterItem* item);
     void filterDialogWrite(FilterDialog &dlg,FilterItem* item);
@@ -567,7 +570,7 @@ private slots:
     void on_checkBoxSortByTime_toggled(bool checked);
     void on_checkBoxSortByTimestamp_toggled(bool checked);
 
-    void on_actionMarker_triggered();
+    void on_actionMarker_triggered(const QString &msg = QString(""));
 
     void on_actionToggle_PluginsEnabled_triggered(bool checked);
     void on_actionToggle_FiltersEnabled_triggered(bool checked);

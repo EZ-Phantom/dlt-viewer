@@ -531,6 +531,14 @@ typedef struct
     uint8_t status;                 /**< reponse status */
 } PACKED DltServiceMarker;
 
+typedef struct
+{
+    uint32_t service_id;            /**< service ID */
+    uint8_t status;                 /**< reponse status */
+    char message[1024];
+} PACKED DltServiceMarkerCustom;
+
+
 /**
  * Structure to store filter parameters.
  * ID are maximal four characters. Unused values are filled with zeros.

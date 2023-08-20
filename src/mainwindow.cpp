@@ -159,6 +159,13 @@ MainWindow::MainWindow(QWidget *parent) :
         qDebug() << "Start minimzed as defined in the settings";
         this->setWindowState(Qt::WindowMinimized);
     }
+
+    customMarks = new CustomMarks();
+    ui->tabWidget->addTab(customMarks, "Marks");
+
+    connect(customMarks, &CustomMarks::start, [this](QString msg){msg.prepend("start "); on_actionMarker_triggered(msg);});
+    connect(customMarks, &CustomMarks::stop, [this](QString msg){msg.prepend("stop "); on_actionMarker_triggered(msg);});
+
 }
 
 MainWindow::~MainWindow()
@@ -4547,6 +4554,13 @@ void MainWindow::controlMessage_WriteControlMessage(DltMessage &msg, QString app
     msg.headersize = sizeof(DltStorageHeader) + sizeof(DltStandardHeader) + sizeof(DltExtendedHeader) + DLT_STANDARD_HEADER_EXTRA_SIZE(msg.standardheader->htyp);
     msg.standardheader->len = DLT_HTOBE_16(msg.headersize - sizeof(DltStorageHeader) + msg.datasize);
 
+    QString str = "testing_blat";
+    uint8_t* strPtr = (uint8_t*) malloc(str.size() * sizeof(uint8_t));
+    std::memcpy(strPtr, &str, str.size());
+
+//    msg.databuffer = strPtr;
+//    msg.datasize = str.size();
+
     /* Skip the file handling, if indexer is working on the file */
     if(dltIndexer->tryLock())
     {
@@ -4918,7 +4932,7 @@ void MainWindow::ControlServiceRequest(EcuItem* ecuitem, int service_id )
     dlt_message_free(&msg,0);
 }
 
-void MainWindow::controlMessage_Marker()
+void MainWindow::controlMessage_Marker(const QString &markerMessage)
 {
     DltMessage msg;
 
@@ -4926,13 +4940,16 @@ void MainWindow::controlMessage_Marker()
     dlt_message_init(&msg,0);
 
     /* prepare payload */
-    msg.datasize = sizeof(DltServiceMarker);
+    msg.datasize = sizeof(DltServiceMarkerCustom);
     if (msg.databuffer) free(msg.databuffer);
     msg.databuffer = (uint8_t *) malloc(msg.datasize);
-    DltServiceMarker *resp;
-    resp = (DltServiceMarker*) msg.databuffer;
+    DltServiceMarkerCustom *resp;
+    resp = (DltServiceMarkerCustom*) msg.databuffer;
     resp->service_id = DLT_SERVICE_ID_MARKER;
     resp->status = DLT_SERVICE_RESPONSE_OK;
+
+//    std::string str = "Your string";
+    strncpy_s(resp->message, markerMessage.toStdString().c_str(), sizeof(resp->message));
 
     /* send message */
     controlMessage_WriteControlMessage(msg,QString(""),QString(""));
@@ -7223,6 +7240,11 @@ void MainWindow::keyPressEvent ( QKeyEvent * event )
         }
     }
 
+    if (event->key() == Qt::Key_F9/* || event->key() == Qt::Key_M*/)
+    {
+        on_actionMarker_triggered();
+    }
+
     QMainWindow::keyPressEvent(event);
 }
 
@@ -7502,7 +7524,7 @@ void MainWindow::jumpToMsgSignal(int index)
 
 void MainWindow::markerSignal()
 {
-    controlMessage_Marker();
+    controlMessage_Marker(customMarks->getMarkText());
 }
 
 void MainWindow::reopenFileSignal()
@@ -7997,9 +8019,9 @@ void MainWindow::on_pushButtonDefaultFilterUpdateCache_clicked()
     on_actionDefault_Filter_Create_Index_triggered();
 }
 
-void MainWindow::on_actionMarker_triggered()
+void MainWindow::on_actionMarker_triggered(const QString &msg)
 {
-    controlMessage_Marker();
+    controlMessage_Marker(msg.isEmpty() ? customMarks->getMarkText() : msg);
 }
 
 void MainWindow::onAddActionToHistory()

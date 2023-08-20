@@ -1149,7 +1149,7 @@ QString QDltMsg::toStringPayload() const
 
         if(getCtrlServiceId() == DLT_SERVICE_ID_MARKER)
         {
-            return "MARKER";
+            return QString("MARKER %2").arg(QString(payload.mid(5)));
         }
 
         text += QString("[%1 %2] ").arg(getCtrlServiceIdString()).arg(getCtrlReturnTypeString());
